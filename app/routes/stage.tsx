@@ -60,37 +60,22 @@ export default function Stage() {
   const [playerDefending, setPlayerDefending] = useState(false);
   const [enemyHit, setEnemyHit] = useState(false);
 
-  // Manejo de estado inicial, antes del render
-  if (!id || loadingCombats || loadingHero)
-    return <p className="text-white p-8">Cargando...</p>;
-
-  if (errorCombats || errorHero || !hero || !combats) {
-    console.error("Error cargando datos", combatError || heroError);
-    return (
-      <p className="text-red-500 p-8">
-        Error: {combatError?.message || heroError?.message || "Error de carga"}
-      </p>
-    );
-  }
-
-  const combatKeys = Object.keys(combats).sort(
+  const combatKeys = Object.keys(combats ?? {}).sort(
     (a, b) => Number(a.replace("combat", "")) - Number(b.replace("combat", ""))
   );
-  const enemies = combats[combatKeys[currentCombatIndex]];
-  const enemy = enemies?.[currentEnemyIndex] ?? null;
-
-  if (!enemy) {
-    return <p className="text-white p-8">No hay enemigos en este combate.</p>;
-  }
+  const enemies = combats?.[combatKeys[currentCombatIndex]] ?? [];
+  const enemy = enemies[currentEnemyIndex] ?? null;
 
   useEffect(() => {
-    if (currentEnemyHealth === null) setCurrentEnemyHealth(enemy.vida);
-    if (currentHeroHealth === null) setCurrentHeroHealth(hero.vida);
-    if (isPlayerTurn === null) {
-      const playerFirst = hero.velocidad >= enemy.velocidad;
-      setIsPlayerTurn(playerFirst);
-      setLogMessage(playerFirst ? "You go first!" : `Enemy goes first!`);
-      if (!playerFirst) setTimeout(enemyTurn, 1000);
+    if (enemy && hero) {
+      if (currentEnemyHealth === null) setCurrentEnemyHealth(enemy.vida);
+      if (currentHeroHealth === null) setCurrentHeroHealth(hero.vida);
+      if (isPlayerTurn === null) {
+        const playerFirst = hero.velocidad >= enemy.velocidad;
+        setIsPlayerTurn(playerFirst);
+        setLogMessage(playerFirst ? "You go first!" : `Enemy goes first!`);
+        if (!playerFirst) setTimeout(enemyTurn, 1000);
+      }
     }
   }, [hero, enemy, isPlayerTurn, currentEnemyHealth, currentHeroHealth]);
 
@@ -135,7 +120,7 @@ export default function Stage() {
         }, 800);
       } else {
         setTimeout(() => {
-          setLogMessage(`You defeated a enemy!`);
+          setLogMessage(`You defeated the enemy!`);
           setShowVictoryModal(true);
         }, 800);
       }
@@ -194,6 +179,29 @@ export default function Stage() {
     setIsPlayerTurn(null);
     setLogMessage("Prepare for the next battle!");
     setShowVictoryModal(false);
+  }
+
+  // ✅ Aquí empieza el render — ya todos los hooks se ejecutaron
+
+  if (!id) {
+    return <p className="text-white p-8">Esperando ID del stage...</p>;
+  }
+
+  if (loadingCombats || loadingHero) {
+    return <p className="text-white p-8">Cargando...</p>;
+  }
+
+  if (errorCombats || errorHero || !hero || !combats) {
+    console.error("Error cargando datos", combatError || heroError);
+    return (
+      <p className="text-red-500 p-8">
+        Error: {combatError?.message || heroError?.message || "Error de carga"}
+      </p>
+    );
+  }
+
+  if (!enemy) {
+    return <p className="text-white p-8">No hay enemigos en este combate.</p>;
   }
 
   return (

@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/stage/:id", "destination": "/" },
-    { "source": "/(.*)", "destination": "/" }
-  ]
-}
