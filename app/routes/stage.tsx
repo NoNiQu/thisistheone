@@ -19,6 +19,11 @@ export default function Stage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // ✅ Previene renderizado hasta que tengamos el ID
+  if (!id) {
+    return <p className="text-white p-8">Esperando id del stage...</p>;
+  }
+
   const {
     data: combats,
     isLoading: loadingCombats,
@@ -26,7 +31,7 @@ export default function Stage() {
     error: combatError,
   } = useQuery<{ [key: string]: enemy[] }>({
     queryKey: ["combats", id],
-    queryFn: () => fetchCombatsFromStage(id!),
+    queryFn: () => fetchCombatsFromStage(id),
     enabled: !!id,
   });
 
@@ -62,7 +67,9 @@ export default function Stage() {
 
   if (loadingCombats || loadingHero)
     return <p className="text-white p-8">Cargando...</p>;
+
   if (errorCombats || errorHero || !hero || !combats) {
+    console.error("Error cargando datos", combatError || heroError);
     return (
       <p className="text-red-500 p-8">
         Error: {combatError?.message || heroError?.message || "Error de carga"}
@@ -97,14 +104,11 @@ export default function Stage() {
     const newHeroHealth = Math.max((currentHeroHealth ?? 0) - dmg, 0);
     setCurrentHeroHealth(newHeroHealth);
     setLogMessage(`You take ${dmg} damage.`);
-
     setTimeout(() => setPlayerHit(false), 300);
-
     if (newHeroHealth <= 0) {
       setTimeout(() => setIsGameOver(true), 800);
       return;
     }
-
     setTimeout(() => {
       setTurnCount((prev) => prev + 1);
       setIsPlayerTurn(true);
@@ -113,7 +117,6 @@ export default function Stage() {
 
   function handleAttack() {
     if (!isPlayerTurn || !enemy) return;
-
     const dmg = calculateDamage(hero.ataque, enemy.defensa);
     const newHealth = Math.max((currentEnemyHealth ?? 0) - dmg, 0);
     setPlayerAttacking(true);
@@ -121,7 +124,6 @@ export default function Stage() {
     setCurrentEnemyHealth(newHealth);
     setLogMessage(`You attack deals ${dmg} damage!`);
     setIsPlayerTurn(false);
-
     setTimeout(() => {
       setPlayerAttacking(false);
       setEnemyHit(false);
@@ -152,7 +154,6 @@ export default function Stage() {
 
   function handleDefend() {
     if (!isPlayerTurn || !enemy) return;
-
     setPlayerDefending(true);
     setLogMessage("You brace for the next attack!");
     const boostedDef = hero.defensa * 2;
@@ -185,12 +186,10 @@ export default function Stage() {
 
   function handleNextBattle() {
     const nextIndex = currentCombatIndex + 1;
-
     if (nextIndex >= combatKeys.length) {
       setStageCompleted(true);
       return;
     }
-
     setCurrentCombatIndex(nextIndex);
     setCurrentEnemyIndex(0);
     setCurrentEnemyHealth(null);
@@ -208,15 +207,13 @@ export default function Stage() {
         alt="Background"
         className="fixed top-0 left-0 w-full h-full object-cover z-0"
       />
-
       <div className="w-full z-10 mt-12 px-6">
         <BattleHeader
           turn={turnCount}
-          stage={Number(id?.replace("stage", "")) || 1}
+          stage={Number(id.replace("stage", "")) || 1}
           combat={currentCombatIndex + 1}
         />
       </div>
-
       <div className="z-10 flex justify-around items-center w-full px-8 py-12">
         <Character
           name={hero.nombre}
@@ -234,7 +231,6 @@ export default function Stage() {
           isHit={enemyHit}
         />
       </div>
-
       <div className="z-10 w-full px-8 py-8 flex flex-col items-center gap-6 bg-gradient-to-b from-black/80 to-black rounded-xl">
         <BattleControls
           onAttack={handleAttack}
@@ -245,13 +241,10 @@ export default function Stage() {
         />
         <ResponseBox text={logMessage} />
       </div>
-
       {showVictoryModal && (
         <VictoryModal enemyName={enemy.nombre} onNext={handleNextBattle} />
       )}
-
       {stageCompleted && <VictoryStageModal onContinue={() => navigate("/")} />}
-
       {isGameOver && <DefeatModal onRestart={() => navigate("/")} />}
     </main>
   );
