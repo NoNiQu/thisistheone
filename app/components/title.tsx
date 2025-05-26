@@ -55,7 +55,7 @@ function Title() {
         className="mt-10 flex justify-center"
       >
         <Button
-          onClick={() => firstStageId && navigate(`/stage/stage1`)}
+          onClick={() => firstStageId && navigate(`/stage/${firstStageId}`)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           variant="secondary"

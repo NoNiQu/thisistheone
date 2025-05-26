@@ -19,11 +19,6 @@ export default function Stage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ✅ Previene renderizado hasta que tengamos el ID
-  if (!id) {
-    return <p className="text-white p-8">Esperando id del stage...</p>;
-  }
-
   const {
     data: combats,
     isLoading: loadingCombats,
@@ -31,7 +26,7 @@ export default function Stage() {
     error: combatError,
   } = useQuery<{ [key: string]: enemy[] }>({
     queryKey: ["combats", id],
-    queryFn: () => fetchCombatsFromStage(id),
+    queryFn: () => fetchCombatsFromStage(id!),
     enabled: !!id,
   });
 
@@ -65,7 +60,8 @@ export default function Stage() {
   const [playerDefending, setPlayerDefending] = useState(false);
   const [enemyHit, setEnemyHit] = useState(false);
 
-  if (loadingCombats || loadingHero)
+  // Manejo de estado inicial, antes del render
+  if (!id || loadingCombats || loadingHero)
     return <p className="text-white p-8">Cargando...</p>;
 
   if (errorCombats || errorHero || !hero || !combats) {
@@ -210,7 +206,7 @@ export default function Stage() {
       <div className="w-full z-10 mt-12 px-6">
         <BattleHeader
           turn={turnCount}
-          stage={Number(id.replace("stage", "")) || 1}
+          stage={Number(id?.replace("stage", "")) || 1}
           combat={currentCombatIndex + 1}
         />
       </div>
