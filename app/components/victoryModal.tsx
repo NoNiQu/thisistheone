@@ -1,3 +1,5 @@
+// components/VictoryModal.tsx
+
 type VictoryModalProps = {
   enemyName: string;
   onNext: () => void;
