@@ -1,5 +1,6 @@
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
+import type { Hero } from "../types/hero";
 import type { enemy } from "../types/enemy";
 
 export const fetchStageById = async (id: string) => {
@@ -27,4 +28,11 @@ export const fetchCombatsFromStage = async (stageId: string): Promise<{ [key: st
   });
 
   return result;
+};
+
+export const fetchHero = async (): Promise<Hero> => {
+  const ref = doc(db, "hero", "mainHero");
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Héroe no encontrado");
+  return snap.data() as Hero;
 };

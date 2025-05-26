@@ -1,5 +1,4 @@
 import Title from "../components/title";
-import Button from "../components/button";
 import TextInformation from "../components/textInformation";
 import Footer from "../components/footer";
 

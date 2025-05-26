@@ -1,30 +1,50 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCombatsFromStage } from "../service/service";
+import { fetchCombatsFromStage, fetchHero } from "../service/service";
 import type { enemy } from "../types/enemy";
+import type { Hero } from "../types/hero";
+
+import Character from "../components/character";
+import BattleControls from "../components/battleControls";
+import BattleHeader from "../components/battleHeader";
+import ResponseBox from "../components/responseBox";
 
 export default function Stage() {
-  const { id } = useParams();
+  const { id } = useParams(); // Ej: "stage1"
 
   const {
     data: combats,
-    isLoading,
-    isError,
-    error,
+    isLoading: loadingCombats,
+    isError: errorCombats,
+    error: combatError,
   } = useQuery<{ [key: string]: enemy[] }>({
     queryKey: ["combats", id],
     queryFn: () => fetchCombatsFromStage(id!),
     enabled: !!id,
   });
 
-  if (isLoading) {
-    return <p className="text-white p-8">Cargando stage...</p>;
+  const {
+    data: hero,
+    isLoading: loadingHero,
+    isError: errorHero,
+    error: heroError,
+  } = useQuery<Hero>({
+    queryKey: ["hero"],
+    queryFn: fetchHero,
+  });
+
+  const currentCombatIndex = 0;
+  const currentTurn = 1;
+
+  if (loadingCombats || loadingHero) {
+    return <p className="text-white p-8">Cargando...</p>;
   }
 
-  if (isError) {
+  if (errorCombats || errorHero) {
     return (
       <p className="text-red-500 p-8">
-        Error al cargar combates: {(error as Error).message}
+        Error:{" "}
+        {(combatError as Error)?.message || (heroError as Error)?.message}
       </p>
     );
   }
@@ -33,27 +53,51 @@ export default function Stage() {
     (a, b) => Number(a.replace("combat", "")) - Number(b.replace("combat", ""))
   );
 
-  return (
-    <main className="text-white p-8">
-      <h1 className="text-3xl font-bold mb-4">Stage: {id}</h1>
-      <p className="mb-6 text-lg">Total de combates: {combatKeys.length}</p>
+  const stageNumber = Number(id?.replace("stage", "")) || 1;
+  const combatNumber = currentCombatIndex + 1;
+  const enemies = combats![combatKeys[currentCombatIndex]];
 
-      {combatKeys.map((combatId) => (
-        <section key={combatId} className="mb-8 border-b border-white/20 pb-4">
-          <h2 className="text-2xl font-semibold mb-2">
-            {combatId.toUpperCase()}
-          </h2>
-          <ul className="list-disc pl-6">
-            {combats![combatId].map((enemy, i) => (
-              <li key={i} className="mb-1">
-                <span className="font-bold">{enemy.nombre}</span> — ❤️{" "}
-                {enemy.vida} | ⚔️ {enemy.ataque} | 🛡️ {enemy.defensa} | 🏃{" "}
-                {enemy.velocidad}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+  return (
+    <main className="relative min-h-screen flex flex-col justify-between items-center bg-black overflow-hidden">
+      {/* Fondo */}
+      <img
+        src="/fondoStage.png"
+        alt="Background"
+        className="fixed top-0 left-0 w-full h-full object-cover z-0"
+      />
+
+      {/* Header */}
+      <div className="w-full z-10">
+        <BattleHeader
+          turn={currentTurn}
+          stage={stageNumber}
+          combat={combatNumber}
+        />
+      </div>
+
+      {/* Personajes */}
+      <div className="z-10 flex justify-around items-center w-full px-8 py-12">
+        <Character
+          name={hero.nombre}
+          sprite={hero.sprite}
+          health={hero.vida}
+          stamina={hero.aguante}
+        />
+        {enemies.length > 0 && (
+          <Character
+            name={enemies[0].nombre}
+            sprite={enemies[0].sprite}
+            health={enemies[0].vida}
+            flipped
+          />
+        )}
+      </div>
+
+      {/* Controles + texto */}
+      <div className="z-10 flex flex-col items-center gap-4 p-6 w-full bg-black/70">
+        <BattleControls />
+        <ResponseBox text="¡El enemigo se prepara para atacar!" />
+      </div>
     </main>
   );
 }
