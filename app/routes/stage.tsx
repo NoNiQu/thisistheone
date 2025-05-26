@@ -13,12 +13,12 @@ import BattleHeader from "../components/battleHeader";
 import ResponseBox from "../components/responseBox";
 import VictoryModal from "../components/victoryModal";
 import VictoryStageModal from "../components/victoryStageModal";
+import DefeatModal from "../components/defeatModal";
 
 export default function Stage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Queries
   const {
     data: combats,
     isLoading: loadingCombats,
@@ -40,34 +40,8 @@ export default function Stage() {
     queryFn: fetchHero,
   });
 
-  // Early return si falta data
-  if (loadingCombats || loadingHero) {
-    return <p className="text-white p-8">Cargando...</p>;
-  }
-
-  if (errorCombats || errorHero || !hero || !combats) {
-    return (
-      <p className="text-red-500 p-8">
-        Error: {combatError?.message || heroError?.message || "Error de carga"}
-      </p>
-    );
-  }
-
-  // Combat setup
-  const combatKeys = Object.keys(combats).sort(
-    (a, b) => Number(a.replace("combat", "")) - Number(b.replace("combat", ""))
-  );
-
   const [currentCombatIndex, setCurrentCombatIndex] = useState(0);
-  const enemies = combats[combatKeys[currentCombatIndex]];
-  const enemy = enemies?.[0];
-
-  // Early return si no hay enemigo
-  if (!enemy) {
-    return <p className="text-white p-8">No hay enemigos en este combate.</p>;
-  }
-
-  // Estado del combate
+  const [currentEnemyIndex, setCurrentEnemyIndex] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState<boolean | null>(null);
   const [turnCount, setTurnCount] = useState(1);
   const [logMessage, setLogMessage] = useState("The battle begins!");
@@ -79,39 +53,55 @@ export default function Stage() {
   );
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [stageCompleted, setStageCompleted] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
 
-  // Inicializar vidas y decidir primer turno
+  const [playerAttacking, setPlayerAttacking] = useState(false);
+  const [playerHit, setPlayerHit] = useState(false);
+  const [playerDefending, setPlayerDefending] = useState(false);
+  const [enemyHit, setEnemyHit] = useState(false);
+
+  if (loadingCombats || loadingHero)
+    return <p className="text-white p-8">Cargando...</p>;
+  if (errorCombats || errorHero || !hero || !combats) {
+    return (
+      <p className="text-red-500 p-8">
+        Error: {combatError?.message || heroError?.message || "Error de carga"}
+      </p>
+    );
+  }
+
+  const combatKeys = Object.keys(combats).sort(
+    (a, b) => Number(a.replace("combat", "")) - Number(b.replace("combat", ""))
+  );
+  const enemies = combats[combatKeys[currentCombatIndex]];
+  const enemy = enemies?.[currentEnemyIndex] ?? null;
+
+  if (!enemy) {
+    return <p className="text-white p-8">No hay enemigos en este combate.</p>;
+  }
+
   useEffect(() => {
-    if (currentEnemyHealth === null) {
-      setCurrentEnemyHealth(enemy.vida);
-    }
-    if (currentHeroHealth === null) {
-      setCurrentHeroHealth(hero.vida);
-    }
+    if (currentEnemyHealth === null) setCurrentEnemyHealth(enemy.vida);
+    if (currentHeroHealth === null) setCurrentHeroHealth(hero.vida);
     if (isPlayerTurn === null) {
       const playerFirst = hero.velocidad >= enemy.velocidad;
       setIsPlayerTurn(playerFirst);
-      setLogMessage(
-        playerFirst ? "You go first!" : `${enemy.nombre} goes first!`
-      );
-      if (!playerFirst) {
-        setTimeout(enemyTurn, 1000);
-      }
+      setLogMessage(playerFirst ? "You go first!" : `Enemy goes first!`);
+      if (!playerFirst) setTimeout(enemyTurn, 1000);
     }
   }, [hero, enemy, isPlayerTurn, currentEnemyHealth, currentHeroHealth]);
 
-  // Turno enemigo
   function enemyTurn() {
     const dmg = calculateDamage(enemy.ataque, hero.defensa);
+    setPlayerHit(true);
     const newHeroHealth = Math.max((currentHeroHealth ?? 0) - dmg, 0);
     setCurrentHeroHealth(newHeroHealth);
-    setLogMessage(`${enemy.nombre} attacks! You take ${dmg} damage.`);
+    setLogMessage(`You take ${dmg} damage.`);
+
+    setTimeout(() => setPlayerHit(false), 300);
 
     if (newHeroHealth <= 0) {
-      setTimeout(() => {
-        setLogMessage("You have been defeated...");
-        navigate("/");
-      }, 1200);
+      setTimeout(() => setIsGameOver(true), 800);
       return;
     }
 
@@ -121,21 +111,36 @@ export default function Stage() {
     }, 1000);
   }
 
-  // Ataque jugador
   function handleAttack() {
-    if (!isPlayerTurn) return;
+    if (!isPlayerTurn || !enemy) return;
 
     const dmg = calculateDamage(hero.ataque, enemy.defensa);
     const newHealth = Math.max((currentEnemyHealth ?? 0) - dmg, 0);
+    setPlayerAttacking(true);
+    setEnemyHit(true);
     setCurrentEnemyHealth(newHealth);
-    setLogMessage(`You attack ${enemy.nombre} for ${dmg} damage!`);
+    setLogMessage(`You attack deals ${dmg} damage!`);
     setIsPlayerTurn(false);
 
+    setTimeout(() => {
+      setPlayerAttacking(false);
+      setEnemyHit(false);
+    }, 300);
+
     if (newHealth <= 0) {
-      setTimeout(() => {
-        setLogMessage(`You defeated ${enemy.nombre}!`);
-        setShowVictoryModal(true);
-      }, 800);
+      if (currentEnemyIndex + 1 < enemies.length) {
+        setTimeout(() => {
+          setCurrentEnemyIndex((prev) => prev + 1);
+          setCurrentEnemyHealth(null);
+          setIsPlayerTurn(null);
+          setLogMessage("A new enemy appears!");
+        }, 800);
+      } else {
+        setTimeout(() => {
+          setLogMessage(`You defeated a enemy!`);
+          setShowVictoryModal(true);
+        }, 800);
+      }
       return;
     }
 
@@ -145,27 +150,29 @@ export default function Stage() {
     }, 1000);
   }
 
-  // Defender
   function handleDefend() {
-    if (!isPlayerTurn) return;
+    if (!isPlayerTurn || !enemy) return;
 
-    setLogMessage("You brace for the next attack! (Defense x2 this turn)");
+    setPlayerDefending(true);
+    setLogMessage("You brace for the next attack!");
     const boostedDef = hero.defensa * 2;
     setIsPlayerTurn(false);
 
     setTimeout(() => {
       const dmg = calculateDamage(enemy.ataque, boostedDef);
+      setPlayerHit(true);
       const newHeroHealth = Math.max((currentHeroHealth ?? 0) - dmg, 0);
       setCurrentHeroHealth(newHeroHealth);
-      setLogMessage(
-        `${enemy.nombre} attacks! You take ${dmg} damage (defended).`
-      );
+      setLogMessage(`You take ${dmg} damage.`);
+      setTimeout(() => {
+        setPlayerHit(false);
+        setPlayerDefending(false);
+      }, 300);
 
       if (newHeroHealth <= 0) {
         setTimeout(() => {
-          setLogMessage("You have been defeated...");
-          navigate("/");
-        }, 1200);
+          setIsGameOver(true);
+        }, 800);
         return;
       }
 
@@ -176,7 +183,6 @@ export default function Stage() {
     }, 1000);
   }
 
-  // Pasar al siguiente combate
   function handleNextBattle() {
     const nextIndex = currentCombatIndex + 1;
 
@@ -186,6 +192,7 @@ export default function Stage() {
     }
 
     setCurrentCombatIndex(nextIndex);
+    setCurrentEnemyIndex(0);
     setCurrentEnemyHealth(null);
     setCurrentHeroHealth(hero.vida);
     setTurnCount(1);
@@ -216,11 +223,15 @@ export default function Stage() {
           sprite={hero.sprite}
           health={currentHeroHealth ?? hero.vida}
           stamina={hero.aguante}
+          isAttacking={playerAttacking}
+          isHit={playerHit}
+          isDefending={playerDefending}
         />
         <Character
           name={enemy.nombre}
           sprite={enemy.sprite}
           health={currentEnemyHealth ?? enemy.vida}
+          isHit={enemyHit}
         />
       </div>
 
@@ -228,7 +239,9 @@ export default function Stage() {
         <BattleControls
           onAttack={handleAttack}
           onDefend={handleDefend}
-          disabled={!isPlayerTurn || showVictoryModal || stageCompleted}
+          disabled={
+            !isPlayerTurn || showVictoryModal || stageCompleted || isGameOver
+          }
         />
         <ResponseBox text={logMessage} />
       </div>
@@ -237,13 +250,9 @@ export default function Stage() {
         <VictoryModal enemyName={enemy.nombre} onNext={handleNextBattle} />
       )}
 
-      {stageCompleted && (
-        <VictoryStageModal
-          onContinue={() => {
-            navigate("/");
-          }}
-        />
-      )}
+      {stageCompleted && <VictoryStageModal onContinue={() => navigate("/")} />}
+
+      {isGameOver && <DefeatModal onRestart={() => navigate("/")} />}
     </main>
   );
 }
