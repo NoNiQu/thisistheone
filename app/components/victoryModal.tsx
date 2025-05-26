@@ -15,7 +15,7 @@ export default function VictoryModal({ enemyName, onNext }: VictoryModalProps) {
         </p>
         <button
           onClick={onNext}
-          className="bg-yellow-400 text-black px-6 py-3 rounded uppercase font-bold text-lg hover:bg-yellow-500 transition-all"
+          className="bg-yellow-400 text-black px-6 py-3 rounded uppercase font-bold text-lg hover:bg-yellow-500 cursor-pointer transition-all"
         >
           Next Battle
         </button>

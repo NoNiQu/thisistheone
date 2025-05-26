@@ -12,7 +12,7 @@ export default function VictoryStageModal({
         <p className="text-xl mb-6">You defeated all enemies!</p>
         <button
           onClick={onContinue}
-          className="bg-green-500 text-black px-6 py-3 rounded uppercase font-bold text-lg hover:bg-green-600 transition-all"
+          className="bg-green-500 text-black px-6 py-3 rounded uppercase font-bold text-lg hover:bg-green-600 cursor-pointer transition-all"
         >
           Return to Home
         </button>
