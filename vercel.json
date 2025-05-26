@@ -1,7 +1,6 @@
 {
   "rewrites": [
-    { "source": "/stage/:id", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/stage/:id", "destination": "/" },
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
-
