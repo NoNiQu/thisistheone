@@ -40,11 +40,13 @@ export default function Stage() {
     return <p className="text-white p-8">Cargando...</p>;
   }
 
-  if (errorCombats || errorHero) {
+  if (errorCombats || errorHero || !hero || !combats) {
     return (
       <p className="text-red-500 p-8">
         Error:{" "}
-        {(combatError as Error)?.message || (heroError as Error)?.message}
+        {(combatError as Error)?.message ||
+          (heroError as Error)?.message ||
+          "Datos no disponibles"}
       </p>
     );
   }
@@ -59,15 +61,13 @@ export default function Stage() {
 
   return (
     <main className="relative min-h-screen flex flex-col justify-between items-center bg-black overflow-hidden">
-      {/* Fondo */}
       <img
-        src="/fondoStage.png"
+        src="/fondo.png"
         alt="Background"
         className="fixed top-0 left-0 w-full h-full object-cover z-0"
       />
 
-      {/* Header */}
-      <div className="w-full z-10">
+      <div className="w-full z-10 mt-12 px-6">
         <BattleHeader
           turn={currentTurn}
           stage={stageNumber}
@@ -75,7 +75,6 @@ export default function Stage() {
         />
       </div>
 
-      {/* Personajes */}
       <div className="z-10 flex justify-around items-center w-full px-8 py-12">
         <Character
           name={hero.nombre}
@@ -88,15 +87,15 @@ export default function Stage() {
             name={enemies[0].nombre}
             sprite={enemies[0].sprite}
             health={enemies[0].vida}
-            flipped
           />
         )}
       </div>
 
-      {/* Controles + texto */}
-      <div className="z-10 flex flex-col items-center gap-4 p-6 w-full bg-black/70">
-        <BattleControls />
-        <ResponseBox text="¡El enemigo se prepara para atacar!" />
+      <div className="z-10 w-full px-8 py-8 flex flex-col items-center gap-6 bg-gradient-to-b from-black/80 to-black rounded-xl">
+        <div className="flex gap-6 justify-center flex-wrap">
+          <BattleControls />
+        </div>
+        <ResponseBox text="What do you do?" />
       </div>
     </main>
   );

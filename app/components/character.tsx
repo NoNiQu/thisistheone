@@ -17,7 +17,7 @@ export default function Character({
 }: CharacterProps) {
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="flex gap-4">
+      <div className="flex gap-6 mb-4">
         <BattleStat icon="/icons/heart-solid.svg" value={health} />
         {stamina !== undefined && (
           <BattleStat icon="/icons/bolt-solid.svg" value={stamina} />
@@ -27,7 +27,7 @@ export default function Character({
       <img
         src={sprite}
         alt={name}
-        className={`w-32 h-auto ${flipped ? "scale-x-[-1]" : ""}`}
+        className={`w-80 h-auto ${flipped ? "scale-x-[-1]" : ""}`}
       />
     </div>
   );
