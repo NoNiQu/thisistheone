@@ -14,10 +14,19 @@ import ResponseBox from "../components/responseBox";
 import VictoryModal from "../components/victoryModal";
 import VictoryStageModal from "../components/victoryStageModal";
 import DefeatModal from "../components/defeatModal";
+import MobileWarning from "../components/mobileWarning";
 
 export default function Stage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const {
     data: combats,
@@ -182,6 +191,7 @@ export default function Stage() {
   }
 
   // ✅ Aquí empieza el render — ya todos los hooks se ejecutaron
+  if (isMobile) return <MobileWarning />;
 
   if (!id) {
     return <p className="text-white p-8">Esperando ID del stage...</p>;
