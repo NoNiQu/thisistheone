@@ -15,11 +15,17 @@ function Footer() {
       <div className="bg-black/50 w-full">
         <div className="flex justify-between items-center px-3 py-3">
           <div className="flex items-center gap-2">
-            <img
-              src="/icons/kickstarter-brands.svg"
-              alt="Kickstarter"
-              className="w-10 h-10 ml-3"
-            />
+            <a
+              href="https://www.kickstarter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/icons/kickstarter-brands.svg"
+                alt="Kickstarter"
+                className="w-10 h-10 ml-3"
+              />
+            </a>
             <span className="uppercase text-white ml-3">
               Colaborate with the Kickstarter
             </span>
@@ -27,16 +33,28 @@ function Footer() {
 
           <div className="flex items-center gap-2">
             <span className="uppercase text-white">Join us:</span>
-            <img
-              src="/icons/square-x-twitter-brands.svg"
-              alt="X/Twitter"
-              className="w-10 h-10 mx-3"
-            />
-            <img
-              src="/icons/discord-brands.svg"
-              alt="Discord"
-              className="w-10 h-10 mr-3"
-            />
+            <a
+              href="https://twitter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/icons/square-x-twitter-brands.svg"
+                alt="X/Twitter"
+                className="w-10 h-10 mx-3"
+              />
+            </a>
+            <a
+              href="https://discord.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/icons/discord-brands.svg"
+                alt="Discord"
+                className="w-10 h-10 mr-3"
+              />
+            </a>
           </div>
         </div>
       </div>
